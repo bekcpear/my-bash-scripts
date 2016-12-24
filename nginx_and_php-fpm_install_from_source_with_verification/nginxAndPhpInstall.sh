@@ -764,9 +764,9 @@ choiceyn 'Are these correct?[y/n]' 'info' ''
 countDown "You confirmed, go on.." 3
 #Install necessory packages and databases(mariadb-server)
 eval "infoe 'info' 'Install necessory packages by yum, please waiting.. '"
-eval "yum install -y epel-release > $main_out_put 2>$err_out_put && yum clean all > $main_out_put 2>$err_out_put" && \
-eval "yum update -y > $main_out_put 2>$err_out_put" && \
-eval "yum install -y $necessoryPackages > $main_out_put 2>$err_out_put"
+eval "https_proxy='$http_proxy' http_proxy='$http_proxy' yum install -y epel-release > $main_out_put 2>$err_out_put && yum clean all > $main_out_put 2>$err_out_put" && \
+eval "https_proxy='$http_proxy' http_proxy='$http_proxy' yum update -y > $main_out_put 2>$err_out_put" && \
+eval "https_proxy='$http_proxy' http_proxy='$http_proxy' yum install -y $necessoryPackages > $main_out_put 2>$err_out_put"
 #Initialize some file name variables
 prefixLoop 'initParaTarDir'
 [ $? -ne 0 ] && exit 1
@@ -816,61 +816,66 @@ function compile(){
 compile 'nginx'
 compile 'php'
 
-##Configuration for nginx and php configure file
+##Configuration of nginx and php configure file for new installation
 #Stupid script below :(
-tmp_conf_flag=(0 0)
-eval "[ -f $nginx_conf_dir/nginx.conf ] && tmp_conf_flag[0]=1"
-if [ ${tmp_conf_flag[0]} -eq 0 ];then
-  [ -f "$nginx_conf_dir/nginx.conf.default" ] && \
-  eval "infoe 'info' 'rename $nginx_conf_dir/nginx.conf.default to $nginx_conf_dir/nginx.conf'" && \
-  eval "mv $nginx_conf_dir/nginx.conf.default $nginx_conf_dir/nginx.conf > $main_out_put 2> $err_out_put" && tmp_conf_flag[0]=1
-  [ $? -eq 0 ] && eval "infoe 'info' 'renamed'" || eval "infoe 'warn' 'rename failed, you should check it later.'" 
-fi
-eval "[ -f $php_conf_dir/php-fpm.conf ] && tmp_conf_flag[1]=1"
-if [ ${tmp_conf_flag[1]} -eq 0 ];then
-  [ -f "$php_conf_dir/php-fpm.conf.default" ] && \
-  eval "infoe 'info' 'rename $php_conf_dir/php-fpm.conf.default to $php_conf_dir/php-fpm.conf'" && \
-  eval "mv $php_conf_dir/php-fpm.conf.default $php_conf_dir/php-fpm.conf > $main_out_put 2> $err_out_put" && tmp_conf_flag[1]=1
-  [ $? -eq 0 ] && eval "infoe 'info' 'renamed'" || eval "infoe 'warn' 'rename failed, you should check it later.'" 
-fi
-if [ ! -f "$php_conf_dir/php-fpm.d/www.conf" ];then
-  if [ ! -f "$php_conf_dir/php-fpm.d/www.conf.default" ];then
-    eval "infoe 'warn' 'has no file $php_conf_dir/php-fpm.d/www.conf.default or $php_conf_dir/php-fpm.d/www.conf, you need to create it manually.'"
-  else
-    eval "infoe 'info' 'rename $php_conf_dir/php-fpm.d/www.conf.default to $php_conf_dir/php-fpm.d/www.conf'" && \
-    eval "mv $php_conf_dir/php-fpm.d/www.conf.default $php_conf_dir/php-fpm.d/www.conf > $main_out_put 2> $err_out_put"
+if [ "$installStatus"x == "new"x ]; then
+  tmp_conf_flag=(0 0)
+  eval "[ -f $nginx_conf_dir/nginx.conf ] && tmp_conf_flag[0]=1"
+  if [ ${tmp_conf_flag[0]} -eq 0 ];then
+    [ -f "$nginx_conf_dir/nginx.conf.default" ] && \
+    eval "infoe 'info' 'rename $nginx_conf_dir/nginx.conf.default to $nginx_conf_dir/nginx.conf'" && \
+    eval "mv $nginx_conf_dir/nginx.conf.default $nginx_conf_dir/nginx.conf > $main_out_put 2> $err_out_put" && tmp_conf_flag[0]=1
     [ $? -eq 0 ] && eval "infoe 'info' 'renamed'" || eval "infoe 'warn' 'rename failed, you should check it later.'" 
   fi
+  eval "[ -f $php_conf_dir/php-fpm.conf ] && tmp_conf_flag[1]=1"
+  if [ ${tmp_conf_flag[1]} -eq 0 ];then
+    [ -f "$php_conf_dir/php-fpm.conf.default" ] && \
+    eval "infoe 'info' 'rename $php_conf_dir/php-fpm.conf.default to $php_conf_dir/php-fpm.conf'" && \
+    eval "mv $php_conf_dir/php-fpm.conf.default $php_conf_dir/php-fpm.conf > $main_out_put 2> $err_out_put" && tmp_conf_flag[1]=1
+    [ $? -eq 0 ] && eval "infoe 'info' 'renamed'" || eval "infoe 'warn' 'rename failed, you should check it later.'" 
+  fi
+  if [ ! -f "$php_conf_dir/php-fpm.d/www.conf" ];then
+    if [ ! -f "$php_conf_dir/php-fpm.d/www.conf.default" ];then
+      eval "infoe 'warn' 'has no file $php_conf_dir/php-fpm.d/www.conf.default or $php_conf_dir/php-fpm.d/www.conf, you need to create it manually.'"
+    else
+      eval "infoe 'info' 'rename $php_conf_dir/php-fpm.d/www.conf.default to $php_conf_dir/php-fpm.d/www.conf'" && \
+      eval "mv $php_conf_dir/php-fpm.d/www.conf.default $php_conf_dir/php-fpm.d/www.conf > $main_out_put 2> $err_out_put"
+      [ $? -eq 0 ] && eval "infoe 'info' 'renamed'" || eval "infoe 'warn' 'rename failed, you should check it later.'" 
+    fi
+  fi
+
+  [ ${tmp_conf_flag[0]} -eq 1 ] && \
+    eval "infoe 'info' 'changing user, group, pid settings to $nginx_user, $nginx_group and $run_dir/nginx.pid in configure file $nginx_conf_dir/nginx.conf'" && \
+    eval "sed -i.sed -e 's/^#user\s\+nobody\;/user  $nginx_user $nginx_group;/' -e 's#^\#pid\s\+logs/nginx.pid\;#pid  $run_dir/nginx.pid;#' $nginx_conf_dir/nginx.conf"
+    [ $? -eq 0 ] && eval "infoe 'info' 'modified'" || eval "infoe 'warn' 'modify failed, you should check it later.'" 
+  [ ${tmp_conf_flag[1]} -eq 1 ] && \
+    eval "infoe 'info' 'changing pid setting to $run_dir/php-fpm.pid in configure file $php_conf_dir/php-fpm.conf'" && \
+    eval "sed -i.sed 's#^\;pid\s\+=\s\+run/php-fpm.pid#pid = $run_dir/php-fpm.pid#' $php_conf_dir/php-fpm.conf"
+    [ $? -eq 0 ] && eval "infoe 'info' 'modified'" || eval "infoe 'warn' 'modify failed, you should check it later.'" 
+
+  #Generate systemd service file in /lib/systemd/system directory.
+  generateNginxSystemdServiceFile
+  eval "cat /lib/systemd/system/nginx.service > $main_out_put 2>$err_out_put"
+  generatePhpFpmSystemdServiceFile
+  eval "cat /lib/systemd/system/php-fpm.service > $main_out_put 2>$err_out_put"
+
+  #Create users and group
+  eval "groupadd $nginx_group"
+  [ $? -eq 0 ] && eval "infoe 'info' 'Group $nginx_group created'" || eval "infoe 'warn' 'Group $nginx_group created failed, you should check it later.'" 
+  [ "$nginx_group"x != "$php_group"x ] && \
+    { eval "groupadd $php_group" && eval "infoe 'info' 'Group $php_group created'" || eval "infoe 'warn' 'Group $php_group created failed, you should check it later.'"; }
+  eval "useradd -g $nginx_group -s /usr/sbin/nologin -M $nginx_user"
+  [ $? -eq 0 ] && eval "infoe 'info' 'User $nginx_user created'" || eval "infoe 'warn' 'User $nginx_user created failed, you should check it later.'" 
+  eval "useradd -g $php_group -s /usr/sbin/nologin -M $php_user"
+  [ $? -eq 0 ] && eval "infoe 'info' 'User $php_user created'" || eval "infoe 'warn' 'User $php_user created failed, you should check it later.'" 
+
+  #Enable Nginx and PHP-FPM at startup
+  eval "systemctl enable nginx > $main_out_put 2> $err_out_put" && eval "infoe 'info' 'Nginx is enabled at startup'"
+  eval "systemctl enable php-fpm > $main_out_put 2> $err_out_put" && eval "infoe 'info' 'PHP-FPM is enabled at startup'"
+else
+  eval "[ -d $nginx_conf_dir$nowDate ] && mv $nginx_conf_dir$nowDate $nginx_conf_dire" && eval "infoe 'info' 'move configuration directory $nginx_conf_dir$nowDate back to $nginx_conf_dire'"
+  eval "[ -d $php_conf_dir$nowDate ] && mv $php_conf_dir$nowDate $php_conf_dire" && eval "infoe 'info' 'move configuration directory $php_conf_dir$nowDate back to $php_conf_dire'"
 fi
-
-[ ${tmp_conf_flag[0]} -eq 1 ] && \
-  eval "infoe 'info' 'changing user, group, pid settings to $nginx_user, $nginx_group and $run_dir/nginx.pid in configure file $nginx_conf_dir/nginx.conf'" && \
-  eval "sed -i.sed -e 's/^#user\s\+nobody\;/user  $nginx_user $nginx_group;/' -e 's#^\#pid\s\+logs/nginx.pid\;#pid  $run_dir/nginx.pid;#' $nginx_conf_dir/nginx.conf"
-  [ $? -eq 0 ] && eval "infoe 'info' 'modified'" || eval "infoe 'warn' 'modify failed, you should check it later.'" 
-[ ${tmp_conf_flag[1]} -eq 1 ] && \
-  eval "infoe 'info' 'changing pid setting to $run_dir/php-fpm.pid in configure file $php_conf_dir/php-fpm.conf'" && \
-  eval "sed -i.sed 's#^\;pid\s\+=\s\+run/php-fpm.pid#pid = $run_dir/php-fpm.pid#' $php_conf_dir/php-fpm.conf"
-  [ $? -eq 0 ] && eval "infoe 'info' 'modified'" || eval "infoe 'warn' 'modify failed, you should check it later.'" 
-
-#Generate systemd service file in /lib/systemd/system directory.
-generateNginxSystemdServiceFile
-eval "cat /lib/systemd/system/nginx.service > $main_out_put 2>$err_out_put"
-generatePhpFpmSystemdServiceFile
-eval "cat /lib/systemd/system/php-fpm.service > $main_out_put 2>$err_out_put"
-
-#Create users and group
-eval "groupadd $nginx_group"
-[ $? -eq 0 ] && eval "infoe 'info' 'Group $nginx_group created'" || eval "infoe 'warn' 'Group $nginx_group created failed, you should check it later.'" 
-[ "$nginx_group"x != "$php_group"x ] && \
-  { eval "groupadd $php_group" && eval "infoe 'info' 'Group $php_group created'" || eval "infoe 'warn' 'Group $php_group created failed, you should check it later.'"; }
-eval "useradd -g $nginx_group -s /usr/sbin/nologin -M $nginx_user"
-[ $? -eq 0 ] && eval "infoe 'info' 'User $nginx_user created'" || eval "infoe 'warn' 'User $nginx_user created failed, you should check it later.'" 
-eval "useradd -g $php_group -s /usr/sbin/nologin -M $php_user"
-[ $? -eq 0 ] && eval "infoe 'info' 'User $php_user created'" || eval "infoe 'warn' 'User $php_user created failed, you should check it later.'" 
-
-#Enable Nginx and PHP-FPM at startup
-eval "systemctl enable nginx > $main_out_put 2> $err_out_put" && eval "infoe 'info' 'Nginx is enabled at startup'"
-eval "systemctl enable php-fpm > $main_out_put 2> $err_out_put" && eval "infoe 'info' 'PHP-FPM is enabled at startup'"
 
 echo 
 echo 
