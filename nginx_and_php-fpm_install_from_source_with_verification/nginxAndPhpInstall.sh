@@ -163,6 +163,7 @@ eval "php_compile_conf='\
   --prefix=$php_install_dir \
   --sysconfdir=$php_conf_dir \
   --enable-fpm \
+  --enable-zip \
   --with-fpm-user=$php_user \
   --with-fpm-group=$php_group \
   --with-mysqli \
