@@ -582,13 +582,14 @@ function showHelp(){
   echo "  -x <host:port>  http proxy"
   echo "  -s <dir>        set which directory to download source file [src_dir=<dir>]"
   echo "  -d <dir>        set the base installation directory [install_dir=<dir>]"
+  echo "  -c <dir>        set the base configuration directory [conf_dir=<dir>]"
   echo
   echo "  Other configuration need to be set in this script file."
   echo "  Parameters set in terminal will override the configuration in this file."
   echo
 }
 if [[ "$@" =~ ^- ]];then
-  while getopts ":ernyhv:s:d:x:j:" opt;do
+  while getopts ":ernyhv:s:d:c:x:j:" opt;do
     case "$opt" in
       h)
         showHelp && exit
@@ -620,6 +621,9 @@ if [[ "$@" =~ ^- ]];then
         ;;
       d)
         install_dir="$OPTARG"
+        ;;
+      c)
+        conf_dir="$OPTARG"
         ;;
       x)
         http_proxy="$OPTARG"
