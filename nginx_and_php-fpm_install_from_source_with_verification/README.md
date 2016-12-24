@@ -82,6 +82,7 @@ PHP 的默认编译参数：
 --prefix=/opt/local/php
 --sysconfdir=/opt/conf/php
 --enable-fpm
+--enable-zip
 --with-fpm-user=php-fpm
 --with-fpm-group=webService
 --with-mysqli
