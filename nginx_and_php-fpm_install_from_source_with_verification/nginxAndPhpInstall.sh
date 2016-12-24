@@ -144,8 +144,8 @@ function nginxConfFunc(){
 eval "nginx_compile_conf='\
   --prefix=$nginx_install_dir \
   --conf-path=$nginx_conf_dir'/nginx.conf' \
-  --user=$nginx_user
-  --group=$nginx_group
+  --user=$nginx_user \
+  --group=$nginx_group \
   --with-http_realip_module \
   --with-http_sub_module \
   --with-http_gzip_static_module \
