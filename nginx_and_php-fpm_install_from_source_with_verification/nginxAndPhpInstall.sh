@@ -338,12 +338,14 @@ function pwdCheck(){
 #Download function, need [wget]
 # two parameters: $1:<urlstr> and $2:<package_name>
 function dl(){
+  local verbose='-nv'
+  [ "$main_out_put"x == "/dev/stdout"x ] && verbose="-v"
   pwdCheck 'src_dir'
   if [ -f "$2" ];then
     eval "infoe 'info' 'File $2 exist, skiping download'"
   else
     eval "infoe 'info' '-Downloading $2 to $(pwd) ...'"
-    eval "https_proxy='$http_proxy' http_proxy='$http_proxy' wget '$1' -O '$2' > $main_out_put 2>$err_out_put"
+    eval "https_proxy='$http_proxy' http_proxy='$http_proxy' wget '$1' -O '$2' $verbose > $main_out_put 2> $err_out_put"
     [ $? -ne 0 ] && { eval "infoe 'err' 'Download $1 Error'"; [[ "$2" =~ (.asc)|(.key)$ ]] && eval "infoe 'err' 'If you really cannot get the correct pgp verification file url, you can add parameter '-n' to this script. BUT it is not recommended.'"; exit 1; }
     eval "infoe 'info' '$2 downloaded'"
   fi
