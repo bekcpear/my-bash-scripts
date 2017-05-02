@@ -4,7 +4,6 @@
 #
 # Description:
 #   Environment is CentOS 7
-#   Database(mariadb-server) is installed default by yum from base-repository
 #   Nginx is compilied from source file.
 #     - openssl and ctnginx(nginx-ct) is compiled to nginx bins, not compiled to system
 #   PHP is compilied from source file.
@@ -37,17 +36,17 @@ c_j='' # how many parallel jobs when makeing
 c_debug='' # set 0:no original command output; 1:no stdout from original command; 2:show all output
 c_soft_prefix_list='' # a array which store the necessory software prefix (e.g.: 'Four software name prefix' described above)
 c_http_proxy='' #default is none
-c_nginx_user=''
-c_nginx_group=''
-c_php_user=''
-c_php_group=''
+c_nginx_user='nginx'
+c_nginx_group='nginx'
+c_php_user='php-fpm'
+c_php_group='php-fpm'
 #some directory (use absolute path better)
 c_src_dir='' #default is /opt/src
 c_install_dir='' #default is /opt/local
 c_nginx_install_dir='' #default is $c_install_dir/nginx
 c_php_install_dir='' #default is $c_install_dir/php
 c_conf_dir='' #default is /opt/conf
-c_nginx_conf_dir='' #default is $c_conf_dir/php
+c_nginx_conf_dir='' #default is $c_conf_dir/nginx
 c_php_conf_dir='' #default is $c_conf_dir/php
 c_run_dir='' #default is /opt/run
 #Url settings
@@ -60,19 +59,19 @@ c_run_dir='' #default is /opt/run
 # c_nginx_source_asc_public_key='http://nginx.org/keys/mdounin.key'
 # c_nginx_source_asc_public_key_id='B0F4253373F8F6F510D42178520A9993A1C052F8'
 # c_nginx_source_asc_public_key_uid='Maxim Dounin <mdounin@mdounin.ru>'
-c_nginx_source='' #necessory or default [url]
-c_nginx_source_asc='' # [url]
+c_nginx_source='https://nginx.org/download/nginx-1.12.0.tar.gz' #necessory or default [url]
+c_nginx_source_asc='https://nginx.org/download/nginx-1.12.0.tar.gz.asc' # [url]
 c_nginx_source_asc_public_key='' # [url]
 c_nginx_source_asc_public_key_fpr='' # [string]
 c_nginx_source_asc_public_key_uid='' # [string]
 #all default valus below is the latest stable relase on 23 Dec,2016
-c_php_source='' #necessory or default
-c_php_source_asc=''
+c_php_source='http://jp2.php.net/distributions/php-7.1.4.tar.bz2' #necessory or default
+c_php_source_asc='http://jp2.php.net/distributions/php-7.1.4.tar.bz2.asc'
 c_php_source_asc_public_key=''
-c_php_source_asc_public_key_fpr=''
-c_php_source_asc_public_key_uid=''
-c_openssl_source='https://www.openssl.org/source/openssl-1.1.0c.tar.gz' #necessory or default
-c_openssl_source_asc='https://www.openssl.org/source/openssl-1.1.0c.tar.gz.asc'
+c_php_source_asc_public_key_fpr='528995BFEDFBA7191D46839EF9BA0ADA31CBD89E'
+c_php_source_asc_public_key_uid='Joe Watkins <krakjoe@php.net>'
+c_openssl_source='https://www.openssl.org/source/openssl-1.1.0e.tar.gz' #necessory or default
+c_openssl_source_asc='https://www.openssl.org/source/openssl-1.1.0e.tar.gz.asc'
 c_openssl_source_asc_public_key=''
 c_openssl_source_asc_public_key_id=''
 c_openssl_source_asc_public_key_uid=''
@@ -162,6 +161,7 @@ function phpConfFunc(){
 eval "php_compile_conf='\
   --prefix=$php_install_dir \
   --sysconfdir=$php_conf_dir \
+  --with-config-file-path=$php_conf_dir \
   --enable-fpm \
   --enable-zip \
   --with-fpm-user=$php_user \
@@ -211,9 +211,7 @@ necessoryPackages="\
   libmcrypt-devel \
   libcurl-devel \
   bison-devel \
-  bison \
-  mariadb \
-  mariadb-server"
+  bison"
 
 #Default systemd service file content
 function generateNginxSystemdServiceFile(){
@@ -763,7 +761,7 @@ eval "echo 'Packages installed by yum ( need epel-release ): $necessoryPackages'
 echo
 choiceyn 'Are these correct?[y/n]' 'info' ''
 countDown "You confirmed, go on.." 3
-#Install necessory packages and databases(mariadb-server)
+#Install necessory packages
 eval "infoe 'info' 'Install necessory packages by yum, please waiting.. '"
 eval "https_proxy='$http_proxy' http_proxy='$http_proxy' yum install -y epel-release > $main_out_put 2>$err_out_put && yum clean all > $main_out_put 2>$err_out_put" && \
 eval "https_proxy='$http_proxy' http_proxy='$http_proxy' yum update -y > $main_out_put 2>$err_out_put" && \
