@@ -16,7 +16,7 @@
 # 帮助信息
 [23:45:53] root@mayfi ~ # ./GEN4AddlSectyOfSSLCert.sh help
 
-  Usage: ./GEN4AddlSectyOfSSLCert.sh COMMAND [OPTIONS]
+  Usage: ./GEN4AddlSectyOfSSLCert.sh COMMAND OPTION(S)
 
   COMMAND
     dhparam      generate a file of DH parameters

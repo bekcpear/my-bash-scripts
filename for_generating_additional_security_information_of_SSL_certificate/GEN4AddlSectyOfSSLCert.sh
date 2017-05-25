@@ -410,7 +410,7 @@ function genFP4Cert() {
 # depend on [echo]
 function showHelp() {
   echo
-  eval "echo '  Usage: $0 COMMAND [OPTIONS]'"
+  eval "echo '  Usage: $0 COMMAND OPTION(S)'"
   echo
   echo '  COMMAND'
   echo '    dhparam      generate a file of DH parameters'
