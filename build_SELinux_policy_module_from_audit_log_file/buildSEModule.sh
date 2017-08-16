@@ -169,6 +169,7 @@ if [ $errorcode -ne 0 ]; then
   exit $errorcode
 fi
 
+modnamechecked=0
 if [ "${modname}"x == x ]; then
   todate=$(date '+%Y%m%d')
   eval "modseq=\$(echo '${allmodules}' | tr '\\t' ' ' | sed -r -e 's/^[0-9]{1,3}\\s+/ 999 /' -e's/\\s+[0-9]{1,3}\\s+/\\n/g' | cut -d' ' -f1 | grep 'fixse${todate}' | cut -c14-15 | sort -n | tail -1)"
@@ -182,14 +183,8 @@ if [ "${modname}"x == x ]; then
     modseq=01
   fi
   modname="fixse${todate}${modseq}"
-else
-  eval "modseq=\$(echo '${allmodules}' | tr '\\t' ' ' | sed -r -e 's/^[0-9]{1,3}\\s+/ 999 /' -e's/\\s+[0-9]{1,3}\\s+/\\n/g' | cut -d' ' -f1 | grep '^${modname}$')"
-  if [ "${modseq}x" != x ]; then
-    echo "removing the same module first: semodule -r ${modname}"
-    eval "semodule -r ${modname}"
-  fi
+  modnamechecked=1
 fi
-[ $? -eq 0 ] || exit $?
 
 sedir="${sedir:-$defaultsedir}"
 logdir="${sedir}/log"
@@ -212,6 +207,7 @@ fi
 if [ "${logfile}x" == x ]; then
   defaultlog=1
   logfile="${logdir}/${modname}.log"
+  eval "overjudge '${logfile}'"
   echo "audit2why -alw > ${logfile}"
   eval "audit2why -alw > ${logfile}"
   [ $? -eq 0 ] || exit $?
@@ -222,6 +218,15 @@ if [ "${logfile}x" == x ]; then
   if [ $logline -eq 0 ]; then
     echo '[NOTICE] empty log, exit..'
     exit 1
+  fi
+fi
+
+if [ ${modnamechecked} -eq 0 ]; then
+  eval "modseq=\$(echo '${allmodules}' | tr '\\t' ' ' | sed -r -e 's/^[0-9]{1,3}\\s+/ 999 /' -e's/\\s+[0-9]{1,3}\\s+/\\n/g' | cut -d' ' -f1 | grep '^${modname}$')"
+  if [ "${modseq}x" != x ]; then
+    echo "removing the same module first: semodule -r ${modname}"
+    eval "semodule -r ${modname}"
+    [ $? -eq 0 ] || exit $?
   fi
 fi
 
